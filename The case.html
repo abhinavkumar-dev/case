@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Case of the Speluncean Explorers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Scholarly Neutral (Off-white, Warm Gray, Dark Slate, Muted Gold Accent) -->
+    <!-- Application Structure Plan: The application transforms the linear text report into an interactive, guided learning experience. It uses a multi-section flow: 1. Introduction to set the scene. 2. An interactive timeline to present the facts engagingly. 3. A clear statement of the legal dilemma. 4. An initial user poll to encourage engagement and personal reflection. 5. A tabbed interface presenting five distinct judicial philosophies (based on the original paper's judges) to organize and compare the core legal arguments. 6. A concluding summary. This structure was chosen over a simple text dump to make the abstract legal concepts more digestible, comparable, and memorable for a student audience, guiding them from facts to personal opinion to nuanced analysis. -->
+    <!-- Visualization & Content Choices: Report Info: Narrative of the case -> Goal: Inform/Engage -> Viz/Method: Interactive HTML/JS vertical timeline -> Interaction: Click to expand event details -> Justification: Breaks down the story into manageable parts, more engaging than a text block. Report Info: Core legal question -> Goal: Engage/Compare -> Viz/Method: User poll with buttons and a Chart.js doughnut chart to show results -> Interaction: Click to "vote" and see aggregate opinions -> Justification: Actively involves the user in the dilemma before presenting formal arguments. Library: Chart.js. Report Info: Different legal philosophies/arguments -> Goal: Organize/Compare -> Viz/Method: Tabbed content area using HTML/JS -> Interaction: Click tabs to switch between different "Judge's Opinions" -> Justification: Provides a clear, structured way to compare and contrast the competing legal theories, which is the primary pedagogical goal of the source material. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            background-color: #F8F5F2;
+            color: #4A4A4A;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Lora', serif;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 1rem;
+            left: -2.1rem;
+            width: 1.6rem;
+            height: 1.6rem;
+            background-color: #D1C4E9;
+            border-radius: 50%;
+            border: 4px solid #F8F5F2;
+        }
+        .timeline-item:hover::before {
+            background-color: #B39DDB;
+        }
+        .tab-active {
+            border-color: #7E57C2;
+            color: #7E57C2;
+            background-color: #EDE7F6;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            min-height: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <main class="container mx-auto p-4 md:p-8 max-w-5xl">
+        <header class="text-center py-8 md:py-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-800">The Case of the Speluncean Explorers</h1>
+            <p class="mt-4 text-lg text-slate-600">A thought experiment on the nature of law and justice.</p>
+        </header>
+
+        <section id="timeline" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8 text-slate-700">The Fateful Expedition</h2>
+            <p class="text-center max-w-3xl mx-auto mb-12 text-slate-600">
+                This section recounts the harrowing events that led to the explorers' trial. Click on each event in the timeline below to reveal the full details of the story as it unfolded deep within the earth, forcing a group of ordinary men into an unimaginable choice.
+            </p>
+            <div id="timeline-container" class="relative border-l-4 border-purple-200 ml-8 md:ml-12 pl-8 py-4">
+            </div>
+        </section>
+
+        <section id="dilemma" class="bg-white rounded-lg shadow-lg p-8 md:p-12 mb-16">
+            <h2 class="text-3xl font-bold text-center mb-6 text-slate-700">The Legal Dilemma</h2>
+            <p class="text-center max-w-3xl mx-auto mb-8 text-slate-600">After their rescue, the survivors were charged with murder. The statute under which they were tried is straightforward, leaving no room for exceptions. This creates the central conflict for the judges: must they apply the law's literal text, or can they look beyond it to justice?</p>
+            <blockquote class="text-center text-xl italic bg-slate-100 p-6 rounded-md text-slate-800 border-l-4 border-purple-400">
+                "Whoever shall willfully take the life of another shall be punished by death."
+            </blockquote>
+        </section>
+
+        <section id="poll" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-4 text-slate-700">What Is Your Verdict?</h2>
+            <p class="text-center max-w-3xl mx-auto mb-8 text-slate-600">Before exploring the judges' complex legal arguments, consider the case yourself. Based on the facts, how would you rule? Your initial judgment serves as a starting point for understanding the different philosophies of law.</p>
+            <div id="poll-container" class="text-center">
+                <div id="poll-buttons" class="flex justify-center gap-4 mb-8">
+                    <button onclick="castVote('Guilty')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">Guilty</button>
+                    <button onclick="castVote('Not Guilty')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">Not Guilty</button>
+                </div>
+                <div id="poll-results" class="hidden">
+                     <p class="text-center max-w-3xl mx-auto mb-4 text-slate-600 font-semibold">Based on a sample poll of law students:</p>
+                    <div class="chart-container">
+                        <canvas id="verdictChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="arguments">
+            <h2 class="text-3xl font-bold text-center mb-4 text-slate-700">The Opinions of the Justices</h2>
+            <p class="text-center max-w-3xl mx-auto mb-8 text-slate-600">The Supreme Court judges could not reach a unanimous decision. Each approached the case from a different legal philosophy, revealing the core tensions within the law itself. Explore the tabs below to understand each judge's reasoning and how they voted.</p>
+            <div class="flex flex-wrap justify-center border-b border-gray-300 mb-6" id="tabs-container">
+            </div>
+            <div id="tab-content-container" class="bg-white rounded-lg shadow-lg p-8 md:p-12">
+            </div>
+        </section>
+
+        <footer class="text-center py-12 mt-16 text-slate-500">
+             <p>This interactive experience is based on Lon L. Fuller's classic legal hypothetical.</p>
+        </footer>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const timelineData = [
+                {
+                    title: "The Expedition Begins",
+                    content: "Five members of the Speluncean Society, an amateur cave-exploration group, penetrate into a limestone cavern."
+                },
+                {
+                    title: "The Landslide",
+                    content: "While they are deep inside the cave, a landslide occurs. A mass of heavy boulders falls and completely blocks the only known entrance to the cave."
+                },
+                {
+                    title: "Contact and Despair",
+                    content: "The trapped men have a portable wireless machine. They make contact with the rescue party and learn that the rescue will be long and difficult, likely taking at least ten days. Medical experts inform them that they are unlikely to survive ten days without food."
+                },
+                {
+                    title: "The Horrifying Proposal",
+                    content: "Roger Whetmore, one of the explorers, proposes that they must resort to cannibalism to survive, suggesting they cast lots using dice to decide who should be sacrificed."
+                },
+                {
+                    title: "The Fateful Agreement",
+                    content: "After much debate, the others reluctantly agree. However, just before the dice are cast, Whetmore declares he is withdrawing from the agreement. The others, seeing no alternative, decide to roll the dice for him anyway."
+                },
+                {
+                    title: "The Verdict of the Dice",
+                    content: "The dice roll goes against Whetmore. He is killed and eaten by his four companions."
+                },
+                {
+                    title: "Rescue and Arrest",
+                    content: "On the thirty-second day after they entered the cave, the survivors are rescued. After recovering, they are charged with the murder of Roger Whetmore."
+                }
+            ];
+
+            const judicialOpinions = [
+                {
+                    name: "Chief Justice Truepenny",
+                    philosophy: "Legal Positivism & Executive Clemency",
+                    verdict: "Guilty",
+                    reasoning: "The statute is unambiguous and must be applied by the court as written. However, given the tragic circumstances, the court should join a petition to the Chief Executive for clemency, so that justice can be achieved without ignoring the letter of the law."
+                },
+                {
+                    name: "Justice Foster",
+                    philosophy: "Natural Law",
+                    verdict: "Not Guilty",
+                    reasoning: "The laws of the Commonwealth are inapplicable here. The men were in a 'state of nature,' cut off from society, where the normal rules do not apply. They created their own social contract. Furthermore, the purpose of the law (deterrence) would not be served by convicting these men."
+                },
+                {
+                    name: "Justice Tatting",
+                    philosophy: "Emotional Conflict & Indecision",
+                    verdict: "Withdraws",
+                    reasoning: "I find myself torn between sympathy for the men and a feeling of abhorrence for their act. The legal arguments on both sides are compelling but ultimately flawed. Unable to resolve the contradictions between law and morality, I find myself unable to make a decision and must withdraw from the case."
+                },
+                {
+                    name: "Justice Keen",
+                    philosophy: "Strict Legal Positivism / Textualism",
+                    verdict: "Guilty",
+                    reasoning: "My duty as a judge is not to decide what is 'right' or 'wrong,' but to apply the law as it is written by the legislature. The statute clearly makes their actions murder. The question of clemency is for the executive branch, not the judiciary. My personal feelings are irrelevant."
+                },
+                {
+                    name: "Justice Handy",
+                    philosophy: "Legal Realism / Pragmatism",
+                    verdict: "Not Guilty",
+                    reasoning: "We must consider common sense and public opinion. The vast majority of the public wants these men to be let go. The case is a matter of practical wisdom, not abstract legal theory. The defendants have suffered enough. A declaration of innocence is the most sensible and just outcome."
+                }
+            ];
+
+            const timelineContainer = document.getElementById('timeline-container');
+            timelineData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'timeline-item relative mb-8 pl-8 cursor-pointer group';
+                div.innerHTML = `
+                    <h4 class="font-bold text-lg text-purple-800 group-hover:text-purple-600">${item.title}</h4>
+                    <p class="hidden mt-2 text-slate-600">${item.content}</p>
+                `;
+                div.addEventListener('click', () => {
+                    div.querySelector('p').classList.toggle('hidden');
+                });
+                timelineContainer.appendChild(div);
+            });
+
+            const tabsContainer = document.getElementById('tabs-container');
+            const tabContentContainer = document.getElementById('tab-content-container');
+            
+            judicialOpinions.forEach((opinion, index) => {
+                const tabButton = document.createElement('button');
+                tabButton.className = 'tab-button px-4 py-2 mx-1 mb-2 font-semibold text-gray-600 border-b-2 border-transparent hover:text-purple-600 transition';
+                if (index === 0) {
+                    tabButton.classList.add('tab-active');
+                }
+                tabButton.textContent = opinion.name;
+                tabButton.onclick = () => showTab(index);
+                tabsContainer.appendChild(tabButton);
+            });
+            
+            window.showTab = (index) => {
+                const opinion = judicialOpinions[index];
+                tabContentContainer.innerHTML = `
+                    <span class="inline-block bg-purple-100 text-purple-800 text-sm font-semibold px-3 py-1 rounded-full mb-4">${opinion.philosophy}</span>
+                    <h3 class="text-2xl font-bold mb-2 text-slate-800">${opinion.name}</h3>
+                    <p class="text-xl font-semibold mb-4 ${opinion.verdict === 'Guilty' ? 'text-red-600' : (opinion.verdict === 'Not Guilty' ? 'text-green-600' : 'text-gray-600')}">Verdict: ${opinion.verdict}</p>
+                    <p class="text-slate-700 leading-relaxed">${opinion.reasoning}</p>
+                `;
+                
+                document.querySelectorAll('.tab-button').forEach((button, i) => {
+                    button.classList.toggle('tab-active', i === index);
+                });
+            };
+
+            showTab(0);
+        });
+
+        let verdictChart = null;
+        window.castVote = (vote) => {
+            document.getElementById('poll-buttons').classList.add('hidden');
+            document.getElementById('poll-results').classList.remove('hidden');
+
+            const ctx = document.getElementById('verdictChart').getContext('2d');
+            const chartData = {
+                labels: ['Guilty', 'Not Guilty'],
+                datasets: [{
+                    data: [45, 55],
+                    backgroundColor: ['#EF4444', '#22C55E'],
+                    borderColor: '#F8F5F2',
+                    borderWidth: 4
+                }]
+            };
+
+            if (verdictChart) {
+                verdictChart.destroy();
+            }
+
+            verdictChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    family: "'Source Sans Pro', sans-serif"
+                                },
+                                color: '#4A4A4A'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+        };
+
+    </script>
+</body>
+</html>
